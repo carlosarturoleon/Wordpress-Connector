@@ -830,7 +830,7 @@ def check_urls(urls):
 
 def extract_urls_from_text(text):
     # Regular expression to match plain URLs, excluding a closing parenthesis or other delimiters at the end
-    pattern = r'https?://(?!infoinstitute\.wpcomstaging\.com|generalrelativity\.org)[^\s,;)]+'
+    pattern = r'https?://(?!example\.example2\.com|example3\.org)[^\s,;)]+'
     urls = re.findall(pattern, text)
     # Convert the list to a set to remove duplicates, then convert back to a list
     unique_urls = list(set(urls))
