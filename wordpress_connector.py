@@ -730,9 +730,9 @@ def update_blog_posts_from_file(access_token, site_domain, json_file_path, markd
     # Iterate through Markdown files and update posts
     for filename in os.listdir(markdown_folder_path):
         if categories=="Glossary":
-            url = "https://generalrelativity.org/glossary/" + filename
+            url = "https://example.org/glossary/" + filename
         else:
-            url = "https://generalrelativity.org/blog/" + filename
+            url = "https://example.org/blog/" + filename
         url = url.replace(".md", "/")
         if filename.endswith('.md') and filename not in processed_files:
             markdown_file_path = os.path.join(markdown_folder_path, filename)
