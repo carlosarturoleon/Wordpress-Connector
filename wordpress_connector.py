@@ -1,10 +1,8 @@
 import requests, markdown, os, re, json, string, chardet, csv, random
-from flask import Flask, request, redirect
 import pandas as pd
 from urllib.parse import urlparse
 
 
-app = Flask(__name__)
 
 with open('credentials.json', 'r') as config_file:
     credentials = json.load(config_file)
@@ -15,28 +13,6 @@ CLIENT_SECRET = credentials['REDIRECT_URI']
 CODE = credentials['REDIRECT_URI']
 ACCESS_TOKEN = credentials['REDIRECT_URI']
 SITE_ID = credentials['REDIRECT_URI']
-
-
-@app.route("/authorize")
-def authorize():
-    """
-    Redirects the user to the WordPress authorization page.
-    """
-    auth_url = f"https://public-api.wordpress.com/oauth2/authorize?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&response_type=code"
-    return redirect(auth_url)
-
-
-@app.route("/oauth")
-def oauth_callback():
-    """
-    Handles the callback from WordPress OAuth.
-    """
-    code = request.args.get("code")
-    if code:
-        # Now you can use this code to get an access token
-        return f"Authorization code: {code}"
-    else:
-        return "No code provided by WordPress."
 
 
 def get_access_token(client_id, redirect_uri, client_secret, code):
@@ -1145,11 +1121,6 @@ def find_and_export_nested_links(folder_path, output_csv):
         print("Failed to create CSV file.")
 
 
-
-
-# Run the flask app to obtain the code
-# if __name__ == '__main__':
-#     app.run()
 
 # Get Access Token
 # token = get_access_token(CLIENT_ID, REDIRECT_URI, CLIENT_SECRET, CODE)
