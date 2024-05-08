@@ -5,8 +5,8 @@ with open('credentials.json', 'r') as config_file:
 
 CLIENT_ID = credentials['CLIENT_ID']
 REDIRECT_URI = credentials['REDIRECT_URI']
-CLIENT_SECRET = credentials['REDIRECT_URI']
-CODE = credentials['REDIRECT_URI']
+CLIENT_SECRET = credentials['CLIENT_SECRET']
+CODE = credentials['CODE']
 
 
 def get_access_token(client_id, redirect_uri, client_secret, code):
