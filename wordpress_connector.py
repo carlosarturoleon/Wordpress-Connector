@@ -1132,28 +1132,6 @@ def repairing_empty_links(directory, checkpoint_file='checkpoint.txt', error_log
                         log_file.write(f"Error in file {file_path}: {str(e)}\n")
                            
     print(f"Total Markdown files processed: {file_count}")
-    
-
-def detect_encoding(file_path):
-    """
-    Detects the encoding of a file based on its content.
-
-    This function opens a file in binary mode, reads its content, and uses the chardet library to
-    analyze the bytes to determine the most likely character encoding. It is useful for preparing to
-    process files with unknown or varied encodings, especially when dealing with text files that may
-    contain non-standard or mixed encodings.
-
-    Parameters:
-    file_path (str): The path to the file whose encoding needs to be detected.
-
-    Returns:
-    str: The name of the encoding detected (e.g., 'utf-8', 'ascii', 'iso-8859-1'). If no specific encoding
-         is confidently detected, the function may return a generic answer like 'Windows-1252' or None.
-    """
-    with open(file_path, 'rb') as file:
-        raw_data = file.read()
-    result = chardet.detect(raw_data)
-    return result['encoding']
 
 
 def get_wordpress_media(site_id, access_token):
