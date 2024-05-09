@@ -773,6 +773,19 @@ def extract_post_details(json_data):
 
 
 def is_valid_url(url):
+    """
+    Validates the given URL to check if it is well-formed by parsing it using urlparse.
+
+    This function attempts to parse the URL and checks if it contains both a scheme
+    (e.g., 'http', 'https') and a network location part (netloc). If either is missing,
+    or if the URL is malformed and cannot be parsed, the function returns False.
+
+    Parameters:
+    url (str): The URL string to validate.
+
+    Returns:
+    bool: True if the URL is well-formed, False otherwise.
+    """
     try:
         result = urlparse(url)
         return all([result.scheme, result.netloc])
@@ -781,6 +794,22 @@ def is_valid_url(url):
 
 
 def check_urls(urls):
+    """
+    Checks a list of URLs by sending an HTTP HEAD request to each and records the status code.
+
+    The function iterates through each URL in the provided list and attempts to make a HEAD request
+    to determine if the URL is accessible. It prints the URL along with its HTTP status code.
+    URLs that do not return a 200 OK status code are considered failed and are recorded. If an
+    exception occurs during the request (e.g., network issues, invalid URL), it is caught, and
+    the error is printed. The function keeps track of URLs that fail due to either non-200 status
+    codes or exceptions where no response is available from the server.
+
+    Parameters:
+    urls (list of str): A list of URL strings to be checked.
+
+    Returns:
+    list of dict: Each dictionary contains the 'url' and its corresponding 'status_code'.
+    """ 
     failed_links = []
 
     for url in urls:
@@ -804,7 +833,23 @@ def check_urls(urls):
     return failed_links
 
 
+ # TODO: Update function to take a list of URLs to exclude as an input parameter
 def extract_urls_from_text(text):
+    """
+    Extracts unique URLs from a given text string using a regular expression pattern.
+
+    This function searches for URLs that start with 'http' or 'https' within the provided text.
+    It uses a regular expression to identify these URLs, explicitly excluding URLs that belong to
+    'example.example2.com' or 'example3.org'. It also ensures that the URLs do not end with commas,
+    semicolons, or closing parentheses, which are typical delimiters in text. After extracting all
+    URLs, it converts the list of URLs to a set and back to a list to remove any duplicate entries.
+
+    Parameters:
+    text (str): The text string from which URLs will be extracted.
+
+    Returns:
+    list of str: A list containing the unique URLs found in the text, without duplicates.
+    """
     # Regular expression to match plain URLs, excluding a closing parenthesis or other delimiters at the end
     pattern = r'https?://(?!example\.example2\.com|example3\.org)[^\s,;)]+'
     urls = re.findall(pattern, text)
@@ -815,6 +860,27 @@ def extract_urls_from_text(text):
 
 
 def find_failing_links_and_update_csv(directory, batch_size=100):
+    """
+    Searches for failing links in Markdown files within a given directory and logs them in a CSV file.
+
+    This function recursively traverses a specified directory, processing each Markdown file it finds.
+    It extracts URLs from each Markdown file using the extract_urls_from_text function, checks each URL's
+    accessibility using the check_urls function, and collects any failing URLs. Every 'batch_size' number
+    of files processed, or at the end of the directory traversal, it writes the failing URLs to a CSV file.
+    This batch processing helps in managing memory and ensures data is saved periodically in case of interruptions.
+
+    Parameters:
+    directory (str): The path to the directory containing the Markdown files to be processed.
+    batch_size (int): The number of files to process before updating the CSV file. Defaults to 100.
+
+    Returns:
+    None: This function does not return any value but outputs a CSV file named 'failing_links.csv' containing
+          the paths to files and the failing URLs found within those files.
+
+    Outputs:
+    A CSV file 'failing_links.csv' in the same directory where the script is run. This file includes columns
+    for 'File' and 'Failing URL' detailing where each failing link was found.
+    """
     failing_links = []
     file_count = 0
     csv_file = 'failing_links.csv'
@@ -852,11 +918,40 @@ def find_failing_links_and_update_csv(directory, batch_size=100):
 
 
 def update_checkpoint(checkpoint_file, file_name):
+    """
+    Updates a checkpoint file by appending a new file name to it.
+
+    This function opens a specified checkpoint file in append mode and adds the name of a file
+    (typically indicating processing completion) followed by a newline. This is useful for tracking
+    progress in batch processes or logging which files have been processed.
+
+    Parameters:
+    checkpoint_file (str): The path to the checkpoint file where the file name will be appended.
+    file_name (str): The name of the file to append to the checkpoint file.
+
+    Returns:
+    None: This function does not return any value but modifies the checkpoint file on disk.
+    """
     with open(checkpoint_file, 'a', encoding='utf-8') as cp_file:
         cp_file.write(file_name + "\n")
 
 
 def read_checkpoint(checkpoint_file):
+    """
+    Reads a checkpoint file and returns a set of processed file names.
+
+    This function checks if the specified checkpoint file exists. If it does not exist, it returns an empty set.
+    If the file exists, it opens the file, reads the contents, and splits the contents into lines, assuming each
+    line represents a processed file name. It then returns these names as a set, which helps in ensuring that 
+    each file name is unique and allows for efficient membership testing.
+
+    Parameters:
+    checkpoint_file (str): The path to the checkpoint file to read from.
+
+    Returns:
+    set: A set containing the names of files that have been processed according to the checkpoint file. Returns
+         an empty set if the checkpoint file does not exist.
+    """
     if not os.path.exists(checkpoint_file):
         return set()
     with open(checkpoint_file, 'r', encoding='utf-8') as cp_file:
@@ -865,6 +960,22 @@ def read_checkpoint(checkpoint_file):
 
 
 def update_failing_urls(csv_file, data):
+    """
+    Appends a new row of data about a failing URL to a CSV file or creates a new file if it does not exist.
+
+    This function checks if a specified CSV file exists. If the file does not exist, it will be created and a
+    header row will be added. If it exists, the function simply appends a new row of data. The data is expected
+    to be a dictionary matching the CSV's column structure, which includes 'File Name', 'URL', and 'Status Code'.
+    This approach ensures that the information about failing URLs can be continuously updated in batch operations
+    or repeated checks without losing previous data.
+
+    Parameters:
+    csv_file (str): The file path to the CSV where data about failing URLs is stored or will be stored.
+    data (dict): A dictionary containing the file name, URL, and status code of a failing URL.
+
+    Returns:
+    None: This function does not return any value but writes to a CSV file on disk.
+    """
     # Check if the CSV file exists
     file_exists = os.path.isfile(csv_file)
 
@@ -882,6 +993,25 @@ def update_failing_urls(csv_file, data):
 
 
 def remove_failing_links_from_file(file_path, failing_urls, error_log_file="decoding_log_errors.txt"):
+    """
+    Removes all instances of specified failing URLs from a file and optionally logs errors.
+
+    This function reads the content of a given file and iteratively removes each URL provided in the
+    'failing_urls' list. It uses regular expressions to safely escape and remove URLs and their associated
+    Markdown link syntax if no text remains in the link. If an error occurs during file processing, the error
+    details are logged to a specified error log file. If the error log file does not exist, it will be created.
+
+    Parameters:
+    file_path (str): The path to the file from which URLs need to be removed.
+    failing_urls (list of dict): A list of dictionaries, each containing the 'url' key with the URL to remove.
+    error_log_file (str): The path to the log file where errors should be recorded. Defaults to "decoding_log_errors.txt".
+
+    Returns:
+    None: This function does not return any value but modifies the content of the specified file and potentially writes to a log file.
+
+    Exceptions:
+    This function logs any exceptions that occur during its execution to the 'error_log_file', noting the file affected and the error message.
+    """
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             content = file.read()
@@ -926,6 +1056,29 @@ def save_failing_urls_to_csv(File, failing_urls_list, output_csv='failing_urls.c
 
 
 def check_and_remove_links(directory, checkpoint_file='checkpoint.txt'):
+    """
+    Processes Markdown files in a directory, checks for failing links, removes them, and logs processed files.
+
+    This function walks through a directory, identifies Markdown files not previously processed (as recorded in
+    a checkpoint file), and processes each for failing URLs. It checks the accessibility of each URL found in
+    the content of the Markdown files, records which files have been processed, removes failing links, and
+    optionally logs the failing URLs to a CSV file. This helps in maintaining clean Markdown files in large
+    repositories or directories.
+
+    Parameters:
+    directory (str): The directory path that contains Markdown files to be processed.
+    checkpoint_file (str): The file path used to log the processed Markdown files to avoid reprocessing. 
+                           Defaults to 'checkpoint.txt'.
+
+    Returns:
+    None: This function does not return any value but prints the number of Markdown files processed and modifies
+          the files by removing failing links and updating relevant logs.
+    
+    Side Effects:
+    - Modifies the Markdown files by removing failing links.
+    - Updates a checkpoint file that tracks processed files.
+    - May create or update a CSV file with details of the failing links.
+    """
     processed_files = read_checkpoint(checkpoint_file)
     file_count = 0
     for root, dirs, files in os.walk(directory):
@@ -950,6 +1103,28 @@ def check_and_remove_links(directory, checkpoint_file='checkpoint.txt'):
 
 
 def repairing_empty_links(directory, checkpoint_file='checkpoint.txt', error_log_file='decoding_log_errors.txt'):
+    """
+    Repairs empty Markdown links in files within a specified directory and logs processing details.
+
+    This function traverses a directory, identifying Markdown files that have not been processed
+    (as per a checkpoint file). It searches for Markdown link patterns that lack URLs (e.g., [text]())
+    and repairs them by removing the empty link syntax, leaving just the text. It updates a checkpoint
+    file with the names of processed files to prevent reprocessing on subsequent runs. Errors encountered
+    during processing are logged to a specified error log file.
+
+    Parameters:
+    directory (str): The directory containing Markdown files to be processed.
+    checkpoint_file (str): Path to a file used to track processed files, preventing reprocessing. Defaults to 'checkpoint.txt'.
+    error_log_file (str): Path to a file where errors are logged. Defaults to 'decoding_log_errors.txt'.
+
+    Returns:
+    None: This function does not return any value but prints the total number of processed Markdown files and modifies files by repairing links.
+
+    Side Effects:
+    - Modifies Markdown files by replacing empty links with just the linked text.
+    - Updates a checkpoint file to record processed files.
+    - Errors encountered during the processing are logged to an error log file.
+    """
     # Regex to find Markdown links like [text]()
     link_pattern = re.compile(r'\[([^\]]+)\]\(\s*\)')
     processed_files = read_checkpoint(checkpoint_file)
@@ -985,9 +1160,22 @@ def repairing_empty_links(directory, checkpoint_file='checkpoint.txt', error_log
     print(f"Total Markdown files processed: {file_count}")
     
 
-
-# To detect the file's encoding before opening
 def detect_encoding(file_path):
+    """
+    Detects the encoding of a file based on its content.
+
+    This function opens a file in binary mode, reads its content, and uses the chardet library to
+    analyze the bytes to determine the most likely character encoding. It is useful for preparing to
+    process files with unknown or varied encodings, especially when dealing with text files that may
+    contain non-standard or mixed encodings.
+
+    Parameters:
+    file_path (str): The path to the file whose encoding needs to be detected.
+
+    Returns:
+    str: The name of the encoding detected (e.g., 'utf-8', 'ascii', 'iso-8859-1'). If no specific encoding
+         is confidently detected, the function may return a generic answer like 'Windows-1252' or None.
+    """
     with open(file_path, 'rb') as file:
         raw_data = file.read()
     result = chardet.detect(raw_data)
